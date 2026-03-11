@@ -144,7 +144,19 @@ font-size:0.75rem;
 .badge.zero{color:green;font-weight:bold;}
 
 .leader{background:#e8f8f5;}
+
+.temp-winner{
+background:#e8f9ee;
+border-left:4px solid #27ae60;
+}
+
+.temp-winner .badge{
+background:#c8f7c5;
+font-weight:bold;
+}
+
 .warning{background:#fff3cd;}
+
 .eliminated{
 background:#fdf2f2;
 color:#aaa;
@@ -176,7 +188,7 @@ margin:20px 0;
 <input type="number" id="limit" value="81">
 
 <label>Numero vincitori</label>
-<input type="number" id="winners" value="1" min="1">
+<input type="number" id="winners" value="3" min="1">
 
 <label>Giocatori (separati da virgola)</label>
 <input id="names" placeholder="Mario, Luca, Anna">
@@ -248,17 +260,14 @@ let tableName="Tavolo 1"
 let winners=1
 
 function saveGame(){
-
 localStorage.setItem("tressetteGame",JSON.stringify({
 players,history,limit,tableName,winners
 }))
-
 }
 
 window.onload=function(){
 
 const savedNames=localStorage.getItem("tressetteNames")
-
 if(savedNames){
 document.getElementById("names").value=savedNames
 }
@@ -304,6 +313,12 @@ return
 limit=parseInt(document.getElementById("limit").value)||81
 winners=parseInt(document.getElementById("winners").value)||1
 tableName=document.getElementById("tableName").value
+
+if(winners>=names.length){
+alert("Il numero di vincitori deve essere minore dei giocatori")
+winners=names.length-1
+document.getElementById("winners").value=winners
+}
 
 players=names.map((n,i)=>({
 id:i,
@@ -544,9 +559,16 @@ sorted.forEach((p,i)=>{
 
 let cls=""
 
+if(i < winners && p.active) cls="temp-winner"
+
 if(!p.active)cls="eliminated"
 else if(p.score>=limit-5)cls="warning"
-else if(i===0)cls="leader"
+
+const medal=
+i==0?"1":
+i==1?"2":
+i==2?"3":
+i+1
 
 const reversed=[...p.playerHistory].reverse()
 
@@ -556,17 +578,12 @@ const c=pt===21?"high":pt===0?"zero":""
 const handNumber=p.playerHistory.length-idx
 
 return `
-
 <div class="badge-container">
-
 <span class="hand-num">${handNumber}</span>
-
 <span class="badge ${c}">
 ${pt}
 </span>
-
 </div>
-
 `
 
 }).join("")
@@ -575,7 +592,7 @@ rank.innerHTML+=`
 
 <tr class="${cls}">
 
-<td>${i+1}</td>
+<td>${medal}</td>
 
 <td>${p.name} ${p.active?"":"💀"}</td>
 
