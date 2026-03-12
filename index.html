@@ -227,119 +227,133 @@ let players=[], history=[], limit=81, tableName="Tavolo 1", winners=1;
 let dealerIndex = 0;
 
 function saveGame(){
-localStorage.setItem("tressetteGame",JSON.stringify({players,history,limit,tableName,winners,dealerIndex}));
+    localStorage.setItem("tressetteGame", JSON.stringify({
+        players,
+        history,
+        limit,
+        tableName,
+        winners,
+        dealerIndex
+    }));
 }
 
-window.onload=function(){
-const savedNames=localStorage.getItem("tressetteNames");
-if(savedNames) document.getElementById("names").value=savedNames;
-const saved=localStorage.getItem("tressetteGame");
-if(saved){
-const data=JSON.parse(saved);
-players=data.players;
-history=data.history;
-limit=data.limit;
-tableName=data.tableName;
-winners=data.winners||1;
-dealerIndex=data.dealerIndex||0;
-document.getElementById("displayTableName").innerText=tableName;
-document.getElementById("setup").classList.add("hidden");
-document.getElementById("game").classList.remove("hidden");
-render();
-}
+window.onload = function(){
+    const savedNames = localStorage.getItem("tressetteNames");
+    if(savedNames) document.getElementById("names").value = savedNames;
+
+    const saved = localStorage.getItem("tressetteGame");
+    if(saved){
+        const data = JSON.parse(saved);
+        players = data.players;
+        history = data.history;
+        limit = data.limit;
+        tableName = data.tableName;
+        winners = data.winners || 1;
+        dealerIndex = data.dealerIndex !== undefined ? data.dealerIndex : 0;
+
+        document.getElementById("displayTableName").innerText = tableName;
+        document.getElementById("setup").classList.add("hidden");
+        document.getElementById("game").classList.remove("hidden");
+        render();
+    }
 }
 
 function start(){
-const namesRaw=document.getElementById("names").value;
-localStorage.setItem("tressetteNames",namesRaw);
-const names=namesRaw.split(",").map(n=>n.trim()).filter(n=>n);
-if(names.length<2){alert("Inserisci almeno 2 giocatori");return;}
-limit=parseInt(document.getElementById("limit").value)||81;
-winners=parseInt(document.getElementById("winners").value)||1;
-tableName=document.getElementById("tableName").value;
-if(winners>=names.length){alert("Il numero di vincitori deve essere minore dei giocatori");winners=names.length-1;document.getElementById("winners").value=winners;}
-players=names.map((n,i)=>({id:i,name:n,score:0,active:true,playerHistory:[]})); 
-dealerIndex=0;
-document.getElementById("displayTableName").innerText=tableName;
-document.getElementById("setup").classList.add("hidden");
-document.getElementById("game").classList.remove("hidden");
-saveGame();
-render();
+    const namesRaw = document.getElementById("names").value;
+    localStorage.setItem("tressetteNames", namesRaw);
+    const names = namesRaw.split(",").map(n=>n.trim()).filter(n=>n);
+    if(names.length<2){alert("Inserisci almeno 2 giocatori");return;}
+    limit = parseInt(document.getElementById("limit").value)||81;
+    winners = parseInt(document.getElementById("winners").value)||1;
+    tableName = document.getElementById("tableName").value;
+    if(winners >= names.length){
+        alert("Il numero di vincitori deve essere minore dei giocatori");
+        winners = names.length-1;
+        document.getElementById("winners").value = winners;
+    }
+    players = names.map((n,i)=>({id:i,name:n,score:0,active:true,playerHistory:[]})); 
+    dealerIndex = 0;
+    document.getElementById("displayTableName").innerText = tableName;
+    document.getElementById("setup").classList.add("hidden");
+    document.getElementById("game").classList.remove("hidden");
+    saveGame();
+    render();
 }
 
 function render(){
-const area=document.getElementById("inputs-area");
-area.innerHTML="";
-players.filter(p=>p.active).forEach(p=>{
-const isDealer = p.id===players[dealerIndex]?.id?"leader":"";
-area.innerHTML+=`
-<div class="player-row ${isDealer}">
-<span>${p.name} ${isDealer?"🃏":""}</span>
-<div style="display:flex;gap:4px">
-<input type="number" class="score-in" data-id="${p.id}" min="0" max="21" style="width:50px" oninput="checkSum()">
-<button class="btn-rete" onclick="fillRete(${p.id})">RETE</button>
-<button class="btn-cap" onclick="makeCappotto(${p.id})">CAP</button>
-</div></div>`;
-});
-renderRanking();
-checkSum();
+    const area=document.getElementById("inputs-area");
+    area.innerHTML="";
+    players.filter(p=>p.active).forEach(p=>{
+        const isDealer = p.id===players[dealerIndex]?.id?"leader":"";
+        area.innerHTML+=`
+        <div class="player-row ${isDealer}">
+            <span>${p.name} ${isDealer?"🃏":""}</span>
+            <div style="display:flex;gap:4px">
+                <input type="number" class="score-in" data-id="${p.id}" min="0" max="21" style="width:50px" oninput="checkSum()">
+                <button class="btn-rete" onclick="fillRete(${p.id})">RETE</button>
+                <button class="btn-cap" onclick="makeCappotto(${p.id})">CAP</button>
+            </div>
+        </div>`;
+    });
+    renderRanking();
+    checkSum();
 }
 
 function fillRete(targetId){
-let total=0, target=null;
-document.querySelectorAll(".score-in").forEach(inp=>{
-const val=parseInt(inp.value);
-if(parseInt(inp.dataset.id)==targetId){target=inp}else{total+=isNaN(val)?0:val;}
-});
-let diff=21-total; if(diff<0)diff=0; if(diff>21)diff=21;
-if(target) target.value=diff;
-checkSum();
+    let total=0, target=null;
+    document.querySelectorAll(".score-in").forEach(inp=>{
+        const val=parseInt(inp.value);
+        if(parseInt(inp.dataset.id)==targetId){target=inp}else{total+=isNaN(val)?0:val;}
+    });
+    let diff=21-total; if(diff<0)diff=0; if(diff>21)diff=21;
+    if(target) target.value=diff;
+    checkSum();
 }
 
 function checkSum(){
-let sum=0;
-document.querySelectorAll(".score-in").forEach(i=>sum+=parseInt(i.value||0));
-const display=document.getElementById("sum-display");
-const btn=document.getElementById("confirm-btn");
-display.innerText=`Somma: ${sum} / 21`;
-if(sum===21){btn.disabled=false;btn.classList.add("ready");display.className="sum-check sum-ok";}
-else{btn.disabled=true;btn.classList.remove("ready");display.className="sum-check sum-err";}
+    let sum=0;
+    document.querySelectorAll(".score-in").forEach(i=>sum+=parseInt(i.value||0));
+    const display=document.getElementById("sum-display");
+    const btn=document.getElementById("confirm-btn");
+    display.innerText=`Somma: ${sum} / 21`;
+    if(sum===21){btn.disabled=false;btn.classList.add("ready");display.className="sum-check sum-ok";}
+    else{btn.disabled=true;btn.classList.remove("ready");display.className="sum-check sum-err";}
 }
 
 function addRound(){
-const snapshot={};
-document.querySelectorAll(".score-in").forEach(inp=>{
-const id=inp.dataset.id;
-const val=parseInt(inp.value||0);
-const p=players.find(pl=>pl.id==id);
-snapshot[id]={prevScore:p.score,prevActive:p.active};
-p.score+=val; p.playerHistory.push(val);
-});
-checkEliminations();
-history.push({snapshot,dealerIndex});
-saveGame();
-document.querySelectorAll(".score-in").forEach(i=>i.value="");
-updateDealerAfterRound();
-render();
+    const snapshot={};
+    document.querySelectorAll(".score-in").forEach(inp=>{
+        const id=inp.dataset.id;
+        const val=parseInt(inp.value||0);
+        const p=players.find(pl=>pl.id==id);
+        snapshot[id]={prevScore:p.score,prevActive:p.active};
+        p.score+=val; p.playerHistory.push(val);
+    });
+    checkEliminations();
+    history.push({snapshot,dealerIndex});
+    saveGame();
+    document.querySelectorAll(".score-in").forEach(i=>i.value="");
+    updateDealerAfterRound();
+    render();
 }
 
 function makeCappotto(winnerId){
-if(!confirm("Confermi Cappotto?"))return;
-const snapshot={};
-players.forEach(p=>{
-if(p.active){
-snapshot[p.id]={prevScore:p.score,prevActive:p.active};
-const pts=p.id==winnerId?0:21;
-p.score+=pts; p.playerHistory.push(pts);
-}});
-checkEliminations();
-history.push({snapshot,dealerIndex});
-saveGame();
-updateDealerAfterRound();
-render();
+    if(!confirm("Confermi Cappotto?"))return;
+    const snapshot={};
+    players.forEach(p=>{
+        if(p.active){
+            snapshot[p.id]={prevScore:p.score,prevActive:p.active};
+            const pts=p.id==winnerId?0:21;
+            p.score+=pts; p.playerHistory.push(pts);
+        }
+    });
+    checkEliminations();
+    history.push({snapshot,dealerIndex});
+    saveGame();
+    updateDealerAfterRound();
+    render();
 }
 
-// NUOVA FUNZIONE MAZZIERE CORRETTA
 function updateDealerAfterRound() {
     const totalPlayers = players.length;
     if(totalPlayers === 0) return;
@@ -348,73 +362,74 @@ function updateDealerAfterRound() {
         nextDealerIdx = (nextDealerIdx + 1) % totalPlayers;
     } while(!players[nextDealerIdx].active);
     dealerIndex = nextDealerIdx;
+    saveGame();
 }
 
 function checkEliminations(){
-players.forEach(p=>{if(p.score>=limit)p.active=false;});
-const activePlayers = players.filter(p=>p.active);
-if(activePlayers.length<=winners){
-setTimeout(()=>{
-let msg="🏆 VINCITORI\n\n";
-activePlayers.forEach((p,i)=>{msg+=`${i+1}. ${p.name} (${p.score} pt)\n`;});
-alert(msg);
-},200);
-}
+    players.forEach(p=>{if(p.score>=limit)p.active=false;});
+    const activePlayers = players.filter(p=>p.active);
+    if(activePlayers.length<=winners){
+        setTimeout(()=>{
+            let msg="🏆 VINCITORI\n\n";
+            activePlayers.forEach((p,i)=>{msg+=`${i+1}. ${p.name} (${p.score} pt)\n`;});
+            alert(msg);
+        },200);
+    }
 }
 
 function undoLast(){
-if(!history.length)return;
-const last = history.pop();
-for(let id in last.snapshot){
-const p = players.find(pl=>pl.id==id);
-p.score=last.snapshot[id].prevScore;
-p.active=last.snapshot[id].prevActive;
-p.playerHistory.pop();
-}
-dealerIndex = last.dealerIndex!==undefined?last.dealerIndex:0;
-saveGame(); render();
+    if(!history.length)return;
+    const last = history.pop();
+    for(let id in last.snapshot){
+        const p = players.find(pl=>pl.id==id);
+        p.score=last.snapshot[id].prevScore;
+        p.active=last.snapshot[id].prevActive;
+        p.playerHistory.pop();
+    }
+    dealerIndex = last.dealerIndex !== undefined ? last.dealerIndex : 0;
+    saveGame(); render();
 }
 
 function renderRanking(){
-const rank=document.getElementById("ranking-body");
-rank.innerHTML="";
-const sorted=[...players].sort((a,b)=>a.score-b.score);
-sorted.forEach((p,i)=>{
-let cls=""; if(i<winners && p.active) cls="temp-winner"; if(!p.active)cls="eliminated"; else if(p.score>=limit-11)cls="warning";
-const medal=i<3?i+1:i+1;
-const reversed=[...p.playerHistory].reverse();
-const badges=reversed.map((pt,idx)=>{
-const c=pt===21?"high":pt===0?"zero":"";
-const handNumber=p.playerHistory.length-idx;
-return `<div class="badge-container"><span class="hand-num">${handNumber}</span><span class="badge ${c}">${pt}</span></div>`;
-}).join("");
-const isDealer=p.active && players[dealerIndex].id===p.id?"leader":"";
-rank.innerHTML+=`<tr class="${cls} ${isDealer}"><td>${medal}</td><td>${p.name} ${!p.active?"💀":(isDealer?"🃏":"")}</td><td><b>${p.score}</b></td><td><div class="history-scroll-cell">${badges||"-"}</div></td></tr>`;
-});
+    const rank=document.getElementById("ranking-body");
+    rank.innerHTML="";
+    const sorted=[...players].sort((a,b)=>a.score-b.score);
+    sorted.forEach((p,i)=>{
+        let cls=""; if(i<winners && p.active) cls="temp-winner"; if(!p.active)cls="eliminated"; else if(p.score>=limit-11)cls="warning";
+        const medal=i<3?i+1:i+1;
+        const reversed=[...p.playerHistory].reverse();
+        const badges=reversed.map((pt,idx)=>{
+            const c=pt===21?"high":pt===0?"zero":"";
+            const handNumber=p.playerHistory.length-idx;
+            return `<div class="badge-container"><span class="hand-num">${handNumber}</span><span class="badge ${c}">${pt}</span></div>`;
+        }).join("");
+        const isDealer=p.active && players[dealerIndex].id===p.id?"leader":"";
+        rank.innerHTML+=`<tr class="${cls} ${isDealer}"><td>${medal}</td><td>${p.name} ${!p.active?"💀":(isDealer?"🃏":"")}</td><td><b>${p.score}</b></td><td><div class="history-scroll-cell">${badges||"-"}</div></td></tr>`;
+    });
 }
 
 function shareResults(){
-let text=`🏆 TRESSETTE A PERDERE - ${tableName}\nLimite: ${limit} punti\n\n📊 CLASSIFICA\n`;
-const sorted=[...players].sort((a,b)=>a.score-b.score);
-sorted.forEach((p,i)=>{text+=`${i+1}. ${p.name} - ${p.score} Punti ${p.active?"":"💀"}\n`});
-text+=`\n📝 STORICO\n`;
-players.forEach(p=>{
-let historyText="-";
-if(p.playerHistory.length){
-const circled=["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","⑯","⑰","⑱","⑲","⑳"];
-historyText=p.playerHistory.map((pt,i)=>`${circled[i]||i+1}:${pt}`).join("  ");
-}
-text+=`${p.name}: ${historyText}\n`;
-});
-if(navigator.share){navigator.share({title:"Risultati Tressette",text});}
-else{navigator.clipboard.writeText(text);alert("Risultati copiati negli appunti");}
+    let text=`🏆 TRESSETTE A PERDERE - ${tableName}\nLimite: ${limit} punti\n\n📊 CLASSIFICA\n`;
+    const sorted=[...players].sort((a,b)=>a.score-b.score);
+    sorted.forEach((p,i)=>{text+=`${i+1}. ${p.name} - ${p.score} Punti ${p.active?"":"💀"}\n`});
+    text+=`\n📝 STORICO\n`;
+    players.forEach(p=>{
+        let historyText="-";
+        if(p.playerHistory.length){
+            const circled=["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","⑯","⑰","⑱","⑲","⑳"];
+            historyText=p.playerHistory.map((pt,i)=>`${circled[i]||i+1}:${pt}`).join("  ");
+        }
+        text+=`${p.name}: ${historyText}\n`;
+    });
+    if(navigator.share){navigator.share({title:"Risultati Tressette",text});}
+    else{navigator.clipboard.writeText(text);alert("Risultati copiati negli appunti");}
 }
 
 function resetGame(){
-if(confirm("Vuoi iniziare una nuova partita?")){
-localStorage.removeItem("tressetteGame");
-location.reload();
-}
+    if(confirm("Vuoi iniziare una nuova partita?")){
+        localStorage.removeItem("tressetteGame");
+        location.reload();
+    }
 }
 </script>
 </body>
