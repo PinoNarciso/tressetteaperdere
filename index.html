@@ -503,9 +503,9 @@ function makeCappotto(winnerId){
     // Se il mazziere non è ancora scelto, chiedilo
     if(dealerIndex == -1){
         chooseFirstDealer();
+    } else {
+        updateDealerAfterRound();
     }
-
-    updateDealerAfterRound();
     saveGame();
     render();
 }
