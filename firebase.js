@@ -1,3 +1,4 @@
+
 const firebaseConfig = {
   apiKey: "AIzaSyAeZiPDG89tRz3QeFBhh3wWLkGtjoFGiXA",
   authDomain: "campinato-tresette-a-perdere.firebaseapp.com",
@@ -9,5 +10,4 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.database();

@@ -2,8 +2,9 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+
 <meta charset="UTF-8">
-<title>Tavolo Tressette</title>
+<title>Tavolo di gioco</title>
 
 <link rel="stylesheet" href="style.css">
 
@@ -17,47 +18,98 @@
 
 <div class="card">
 
-<h2 id="tableName">Tavolo</h2>
+<h2 id="tableName"></h2>
 
 <div id="players"></div>
 
 <input id="points" type="number" placeholder="Punti">
 
-<button onclick="addPoints()">Aggiungi punti</button>
+<button id="addBtn" onclick="addPoints()">Inserisci punteggio</button>
 
 </div>
 
 <script>
 
-const params=new URLSearchParams(location.search)
-const tableID=params.get("table") || localStorage.getItem("tableID")
+const tableID=localStorage.getItem("tableID")
 
-localStorage.setItem("tableID",tableID)
-
-let tableData
+let table
+let role="viewer"
 
 db.ref("tables/"+tableID).on("value",snap=>{
 
-tableData=snap.val()
+table=snap.val()
 
-if(!tableData) return
+if(!table) return
 
-document.getElementById("tableName").innerText=tableData.name
+document.getElementById("tableName").innerText=table.name
+
+loadPlayers()
+
+if(table.editor){
+role="viewer"
+document.getElementById("addBtn").classList.add("viewer")
+}
 
 })
 
+function loadPlayers(){
+
+const div=document.getElementById("players")
+
+const players=table.players.split(",")
+
+div.innerHTML="<b>Giocatori</b><br>"+players.join("<br>")
+
+}
+
+function requestPassword(){
+
+const pass=prompt("Inserisci password tavolo")
+
+if(pass===table.password){
+
+db.ref("tables/"+tableID+"/editor").set(true)
+
+role="editor"
+
+alert("Ora puoi inserire i punteggi")
+
+}else{
+
+alert("Password errata")
+
+}
+
+}
+
 function addPoints(){
 
-const pts=parseInt(document.getElementById("points").value || 0)
+if(role!=="editor"){
 
-db.ref("tables/"+tableID+"/backup").set({
+if(!table.editor){
+
+requestPassword()
+
+}else{
+
+alert("Solo un giocatore può inserire i punteggi")
+
+}
+
+return
+
+}
+
+const pts=parseInt(document.getElementById("points").value||0)
+
+db.ref("tables/"+tableID+"/game").set({
 
 points:pts,
 date:new Date().toISOString()
 
 })
 
-alert("Punteggio salvato (backup automatico)")
+alert("Punteggio salvato")
 
 }
 

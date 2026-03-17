@@ -2,8 +2,9 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+
 <meta charset="UTF-8">
-<title>Torneo Tressette</title>
+<title>Tavoli Tressette</title>
 
 <link rel="stylesheet" href="style.css">
 
@@ -16,15 +17,19 @@
 <body>
 
 <div class="card">
-<h2>Tavoli torneo</h2>
+
+<h2>Tavoli disponibili</h2>
+
 <div id="tables"></div>
+
 </div>
 
 <script>
 
-db.ref("tables").on("value", snap=>{
+db.ref("tables").on("value",snap=>{
 
-const tables=snap.val() || {}
+const tables=snap.val()||{}
+
 const div=document.getElementById("tables")
 
 div.innerHTML=""
@@ -34,10 +39,10 @@ for(let id in tables){
 const t=tables[id]
 
 div.innerHTML+=`
-<div class="tableBox">
+<div class="table">
 <b>${t.name}</b><br>
 Giocatori: ${t.players}<br>
-<button onclick="enter('${id}')">Entra nel tavolo</button>
+<button onclick="enterTable('${id}')">Entra nel tavolo</button>
 </div>
 `
 
@@ -45,10 +50,11 @@ Giocatori: ${t.players}<br>
 
 })
 
-function enter(id){
+function enterTable(id){
 
 localStorage.setItem("tableID",id)
-location.href="gioco.html?table="+id
+
+location.href="gioco.html"
 
 }
 

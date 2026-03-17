@@ -1,6 +1,6 @@
 
 body{
-font-family:Segoe UI;
+font-family:Segoe UI, Arial;
 background:#f0f2f5;
 display:flex;
 justify-content:center;
@@ -16,6 +16,12 @@ box-shadow:0 4px 10px rgba(0,0,0,0.1);
 margin-bottom:20px;
 }
 
+input{
+width:100%;
+padding:8px;
+margin-top:6px;
+}
+
 button{
 width:100%;
 padding:10px;
@@ -27,17 +33,12 @@ cursor:pointer;
 margin-top:6px;
 }
 
-input{
-width:100%;
-padding:8px;
-margin-top:6px;
-}
-
-.tableBox{
+.table{
 border-bottom:1px solid #eee;
 padding:10px 0;
 }
 
-.hidden{
-display:none;
+.viewer{
+background:#ddd;
+color:#333;
 }

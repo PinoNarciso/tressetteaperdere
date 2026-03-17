@@ -3,13 +3,12 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Admin Tressette</title>
+<title>Admin Tavoli</title>
 
 <link rel="stylesheet" href="style.css">
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="firebase.js"></script>
 
 </head>
@@ -24,23 +23,22 @@
 <input id="players" placeholder="Mario,Luca,Anna">
 <input id="limit" type="number" value="81">
 <input id="winners" type="number" value="3">
+<input id="password" placeholder="Password tavolo">
 
-<button onclick="create()">Crea Tavolo</button>
-
-<div id="qr"></div>
+<button onclick="createTable()">Crea Tavolo</button>
 
 </div>
 
 <div class="card">
 
-<h3>Tavoli attivi</h3>
+<h3>Tavoli creati</h3>
 <div id="tables"></div>
 
 </div>
 
 <script>
 
-function create(){
+function createTable(){
 
 const id="table_"+Date.now()
 
@@ -49,21 +47,20 @@ db.ref("tables/"+id).set({
 name:document.getElementById("name").value,
 players:document.getElementById("players").value,
 limit:Number(document.getElementById("limit").value),
-winners:Number(document.getElementById("winners").value)
+winners:Number(document.getElementById("winners").value),
+password:document.getElementById("password").value,
+editor:null,
+game:null
 
 })
 
-const link=location.origin + location.pathname.replace("admin.html","") + "gioco.html?table=" + id
-
-document.getElementById("qr").innerHTML=""
-
-new QRCode(document.getElementById("qr"),link)
+alert("Tavolo creato")
 
 }
 
 db.ref("tables").on("value",snap=>{
 
-const tables=snap.val() || {}
+const tables=snap.val()||{}
 
 const div=document.getElementById("tables")
 
@@ -74,25 +71,15 @@ for(let id in tables){
 const t=tables[id]
 
 div.innerHTML+=`
-<div class="tableBox">
-<b>${t.name}</b>
-<button onclick="removeTable('${id}')">Elimina</button>
+<div class="table">
+<b>${t.name}</b><br>
+Giocatori: ${t.players}
 </div>
 `
 
 }
 
 })
-
-function removeTable(id){
-
-if(confirm("Eliminare tavolo?")){
-
-db.ref("tables/"+id).remove()
-
-}
-
-}
 
 </script>
 
